@@ -98,3 +98,92 @@ Presenter - презентер содержит основную логику п
 `emit<T extends object>(event: string, data?: T): void` - инициализация события. При вызове события в метод передается название события и объект с данными, который будет использован как аргумент для вызова обработчика.  
 `trigger<T extends object>(event: string, context?: Partial<T>): (data: T) => void` - возвращает функцию, при вызове которой инициализируется требуемое в параметрах событие с передачей в него данных из второго параметра.
 
+###  Данные
+В приложении используются две сущности, которые описывают данные, — товар и покупатель. Их можно описать такими интерфейсами:
+
+Товар:
+interface IProduct {
+  id: string;
+  description: string;
+  image: string;
+  title: string;
+  category: string;
+  price: number | null;
+}
+
+Покупатель:
+interface IBuyer {
+  payment: TPayment;
+  email: string;
+  phone: string;
+  address: string;
+}
+###  Модели данных
+#### Класс Product
+Отвечает за управлением товаров
+
+Конструктор: 
+`constructor(products: IProduct[])` - устанавливает массив товаров
+
+Поля класса: 
+`products: IProduct[]` - хранит массив всех товаров
+`previewProduct: IProduct | null`- выбранный товар для подробного отображения
+
+Методы класса:
+`setProducts(products: IProduct[]): void` - сохраняет массива товаров.
+`getProducts(): IProduct[]` - получение массива товаров из модели.
+`getProductById(id:string): IProduct | undefined` - получение одного товара по его id.
+`setPreviewProduct(product:IProduct | null): void` - сохраняет товар для подробного отображения.
+`getPreviewProduct():IProduct | null` - получение товара для подробного отображения.
+
+
+
+#### Класс Cart 
+Отвечает за управлением товарами в коризине
+
+Конструктор: 
+`constructor(cart: IProduct[] = [])` создает экземпляр корзины. Принимает параметр - массив товаров, по умолчанию пустая корзина
+
+Поля класса:
+`cart: IProduct[]` хранит массив товаров, выбранных покупателем для покупки.
+
+Методы класса:
+`getProductsInCart(): IProduct[]` - получение массива товаров, которые находятся в корзине.
+`addProductToCart(product: IProduct): void`- добавление товара, который был получен в параметре в массив корзины.
+`removeProductFromCart(id:string):void`- удаление товара, полученного в параметре из массива корзины.
+`clearCart():void` - очистка корзины.
+`getTotalPrice():number`- получение стоимости всех товаров в корзине.
+`getProductCount():number`- получение количества товаров в корзине.
+`checkCartById(id:string):boolean` - проверка наличия товара в корзине по его id.
+
+
+#### Класс Buyer 
+Отвечает за данные о покупателе
+
+`constructor()` - создает экземпляр модели покупателя с пустыми значениями всех полей. Не принимает параметров.
+
+Поля класса:
+`payment: TPayment` - оплата, `email: string` - почта, `phone: string` - телефон, `address: string` - адрес
+
+Методы класса:
+`setPayment(payment: TPayment): void` - сохранение оплаты
+`setEmail(email: string): void` - сохранение почты
+`setPhone(phone: string): void` - сохранение номера телефона
+`setAddress(address: string): void` - сохранение адреса
+`getData(): IBuyer` - получение всех данных покупателя; 
+`clearData():void` - очистка данных покупателя;
+`checkData():boolean` - валидация данных покупателя.
+
+### «Слой коммуникации»
+#### Класс ApiServices
+Отвечает за получение данных с сервера и отправку данных на сервер.
+
+Конструктор:
+`constructor(api: IApi)` - принимает объкет, соответсвуйщий интерфейсу IApi;
+
+Поля класса:
+`api: IApi` - хранит интерфейс IApi для выполнения HTTP-запросов
+
+Методы:
+`getProductList():Promise <Iproduct[]>`- делает get запрос на эндпоинт /product/ и возвращает массив товаров
+`postOrder(orderInfo: IOrder`:Promise<OrderResponse> ; - делает post запрос на эндпоинт /order/ и передаёт в него данные, полученные в параметрах метода.

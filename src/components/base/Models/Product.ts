@@ -1,15 +1,18 @@
 import { IProduct } from "../../../types/index";
+import { EventEmitter } from "../Events";
 export class Product {
-  constructor(products: IProduct[] = []) {
-    this.products = products;
-    this.previewProduct = null;
-  }
 
-  private products: IProduct[];
-  private previewProduct: IProduct | null;
+  private products: IProduct[]=[];
+  private previewProduct: IProduct | null= null;
+  private events: EventEmitter;
+
+  constructor(events: EventEmitter){
+    this.events=events
+  }
 
   public setProducts(products: IProduct[]): void {
     this.products = products;
+    this.events.emit('card:changed');
   }
 
   public getProducts(): IProduct[] {
@@ -25,6 +28,11 @@ export class Product {
 
   public setPreviewProduct(product: IProduct | null): void {
     this.previewProduct = product;
+    if(product === null){
+     this.events.emit('preview:changed'); 
+    } else {
+      this.events.emit('preview:changed', product); 
+    }
   }
 
   public getPreviewProduct(): IProduct | null {

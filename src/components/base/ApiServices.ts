@@ -1,4 +1,4 @@
-import { IApi, IProduct, IOrder, IOrderResponse } from "../../types/index";
+import { IApi, IProduct, IOrder, IOrderResponse, IProductResponse } from "../../types/index";
 
 export class ApiServices {
   private readonly api: IApi;
@@ -8,7 +8,10 @@ export class ApiServices {
   }
 
   getProductList(): Promise<IProduct[]> {
-    return this.api.get<IProduct[]>("/product/");
+    return this.api.get<IProductResponse>("/product/")
+    .then ((response)=>{
+      return response.items
+    })
   }
   postOrder(orderInfo: IOrder): Promise<IOrderResponse> {
     return this.api.post<IOrderResponse>("/order/", orderInfo);

@@ -36,3 +36,14 @@ export interface IProductResponse {
   total: number;
   items: IProduct[];
 }
+export interface ICartAction {
+  id:string;
+}
+export interface IOrderForm {
+  payment:"online" | "cash";
+  address:string;
+}
+export interface IContactsForm{
+  email:string;
+  phone:string;
+}

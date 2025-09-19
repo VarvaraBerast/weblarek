@@ -49,10 +49,6 @@ export class Buyer {
 
   }
   public checkData(): boolean {
-    const emailCheck = this.email.includes("@") && this.email.includes(".");
-    const phoneCheck = this.phone.length >= 10;
-    const addressCheck = this.address.trim().length > 0;
-    const paymentCheck = this.payment !== "";
-    return emailCheck && phoneCheck && addressCheck && paymentCheck;
+    return this.email  !== "" && this.phone !== "" && this.address!== "" && this.payment!== "";
   }
 }

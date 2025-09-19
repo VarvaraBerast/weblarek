@@ -22,18 +22,25 @@ export class Modal extends Component<IModal> {
     this.closeButton.addEventListener("click", () => this.close());
     this.container.addEventListener("click", (event) => {
       if (event.target === this.container) {
-        this.close()
+        this.close();
       }
     });
   }
+  protected handleEscapeKey = (event: KeyboardEvent) => {
+    if (event.key === "Escape") {
+      this.close();
+    }
+  };
   set content(content: HTMLElement) {
     this.contentContainer.innerHTML = "";
     this.contentContainer.appendChild(content);
   }
   open(): void {
     this.container.classList.add("modal_active");
+    document.addEventListener("keydown", this.handleEscapeKey);
   }
   close(): void {
     this.container.classList.remove("modal_active");
+    document.removeEventListener("keydown", this.handleEscapeKey);
   }
 }

@@ -4,7 +4,6 @@ import { Product } from "./components/base/Models/Product";
 import { Cart } from "./components/base/Models/Cart";
 import { Buyer } from "./components/base/Models/Buyer";
 import { ApiServices } from "./components/base/ApiServices";
-import { Api } from "./components/base/Api";
 import { API_URL } from "./utils/constants";
 import { CDN_URL } from "./utils/constants";
 import { Header } from "./components/View/Header";
@@ -20,6 +19,7 @@ import {
   IBuyer,
   ICartAction,
   IContactsForm,
+  IOrder,
   IOrderForm,
   IProduct,
 } from "./types/index";
@@ -42,24 +42,10 @@ export const events = new EventEmitter();
 export const productModel = new Product(events);
 export const cartModel = new Cart(events);
 export const buyerModel = new Buyer(events);
-export const api = new Api(API_URL);
-export const apiServices = new ApiServices(api);
+export const apiServices = new ApiServices(API_URL);
 export const header = new Header(events, headerElement);
 export const gallery = new Gallery(galleryElement);
 export const modal = new Modal(events, modalContainer);
-
-apiServices
-  .getProductList()
-  .then((products) => {
-    productModel.setProducts(products);
-    console.log(
-      "Список товаров полученных из сервера:",
-      productModel.getProducts()
-    );
-  })
-  .catch((error) => {
-    console.error("Ошибка получения товаров:", error);
-  });
 
 events.on("card:changed", () => {
   const products = productModel.getProducts();
@@ -145,22 +131,55 @@ events.on("order:next", (data: IOrderForm) => {
   const renderContacts = contactsForm.render();
   modal.content = renderContacts;
 });
-events.on("order:submit", (data: IContactsForm) => {
-  buyerModel.setEmail(data.email);
-  buyerModel.setPhone(data.phone);
-  const total = cartModel.getTotalPrice();
-  cartModel.clearCart();
-  const success = new Success(events, cloneTemplate(successTemplate));
-  success.total = total;
-  const renderSuccess = success.render();
-  modal.content = renderSuccess;
-  modal.open();
-});
+
 events.on("success:close", () => {
   modal.close();
 });
-events.on("buyer:changed",(data: IBuyer) =>{
-  if (data.payment && data.address && data.email && data.phone){
-    buyerModel.checkData()
+events.on("buyer:changed", (data: IBuyer) => {
+  if (data.payment && data.address && data.email && data.phone) {
+    buyerModel.checkData();
   }
-})
+});
+events.on("order:submit", async (data: IContactsForm) => {
+  buyerModel.setEmail(data.email);
+  buyerModel.setPhone(data.phone);
+  const buyerData = buyerModel.getData();
+  if (!buyerModel.checkData()) {
+    console.error("Данные не заполнены", buyerData);
+    return;
+  }
+  const orderData: IOrder = {
+    payment: buyerData.payment as "online" | "cash",
+    email: buyerData.email,
+    phone: buyerData.phone,
+    address: buyerData.address,
+    total: cartModel.getTotalPrice(),
+    items: cartModel.getProductsInCart().map((item) => item.id),
+  };
+  try {
+    const response = await apiServices.postOrder(orderData);
+    const success = new Success(events, cloneTemplate(successTemplate));
+    success.total = response.total;
+    const renderSuccess = success.render();
+    modal.content = renderSuccess;
+    modal.open();
+    cartModel.clearCart();
+    buyerModel.clearData();
+    header.counter = cartModel.getProductCount();
+  } catch (error) {
+    console.error("Ошибка при оформлении заказа:", error);
+  }
+});
+
+apiServices
+  .getProductList()
+  .then((products) => {
+    productModel.setProducts(products);
+    console.log(
+      "Список товаров полученных из сервера:",
+      productModel.getProducts()
+    );
+  })
+  .catch((error) => {
+    console.error("Ошибка получения товаров:", error);
+  });
